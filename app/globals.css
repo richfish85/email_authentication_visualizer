@@ -1,0 +1,63 @@
+:root {
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "Manrope", sans-serif;
+  --canvas: #eff3f8;
+  --panel: #ffffff;
+  --panel-alt: #f7f9fc;
+  --panel-strong: #0f1728;
+  --stroke: #d8e1eb;
+  --stroke-strong: #a8b7c8;
+  --text-primary: #0f1728;
+  --text-secondary: #4f6076;
+  --accent: #1f68e5;
+  --accent-strong: #1347a5;
+  --accent-soft: #dfe9ff;
+  --pass: #1d7a46;
+  --pass-soft: #e8f5ee;
+  --warning: #a96506;
+  --warning-soft: #fff2dd;
+  --fail: #b93838;
+  --fail-soft: #fdeceb;
+  --info: #335c9d;
+  --info-soft: #e8effa;
+  --panel-shadow: 0 10px 30px rgba(15, 23, 40, 0.06);
+  --gridline: rgba(15, 23, 40, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.9)),
+    linear-gradient(var(--gridline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--gridline) 1px, transparent 1px),
+    linear-gradient(180deg, #f7f9fc 0%, var(--canvas) 100%);
+  background-size:
+    100% 100%,
+    32px 32px,
+    32px 32px,
+    100% 100%;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(31, 104, 229, 0.22);
+}
