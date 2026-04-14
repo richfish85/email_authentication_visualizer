@@ -1,0 +1,23 @@
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+  gap: 1rem;
+  align-items: start;
+}
+
+.main {
+  min-width: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.rail {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 920px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+}

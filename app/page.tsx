@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import Analyzer from "@/components/analyzer";
+import AnalyzerWorkspace from "@/components/analyzer-workspace";
 
 import styles from "./page.module.css";
 
@@ -60,7 +60,7 @@ export default function Home() {
           </div>
         }
       >
-        <Analyzer />
+        <AnalyzerWorkspace />
       </Suspense>
 
       <footer className={styles.footer}>

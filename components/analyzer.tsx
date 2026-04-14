@@ -10,7 +10,17 @@ import {
 } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import HelpTooltip from "@/components/help-tooltip";
 import { normalizeDkimSelectorInput, normalizeDomainInput } from "@/lib/domain";
+import {
+  getDkimLabelHelpKey,
+  getPostureHelpKey,
+  getRecommendationToneHelpKey,
+  getSpfAllHelpKey,
+  getSpfLabelHelpKey,
+  getStatusHelpKey,
+  type HelpItemKey,
+} from "@/lib/help-content";
 import type {
   AnalysisResponse,
   CheckStatus,
@@ -30,6 +40,12 @@ type RecommendationMeta = {
   topic: string;
   tone: "recommended" | "review" | "healthy" | "action";
   toneLabel: string;
+};
+
+type ParsedEntry = {
+  label: string;
+  value: string | string[] | null | undefined;
+  helpKey?: HelpItemKey;
 };
 
 type RunAnalysisOptions = {
@@ -192,24 +208,56 @@ function recommendationMeta(recommendation: string): RecommendationMeta {
   };
 }
 
+function TextWithHelp({
+  text,
+  helpKey,
+  align = "start",
+  side = "top",
+}: {
+  text: string;
+  helpKey?: HelpItemKey;
+  align?: "start" | "end";
+  side?: "top" | "bottom";
+}) {
+  if (!helpKey) {
+    return <span>{text}</span>;
+  }
+
+  return (
+    <span className={styles.inlineHelp}>
+      <span>{text}</span>
+      <HelpTooltip itemKey={helpKey} label={text} align={align} side={side} />
+    </span>
+  );
+}
+
 function StatusPill({ status }: { status: CheckStatus }) {
   return (
-    <span className={`${styles.statusPill} ${styles[`status${status}`]}`}>
-      {statusLabel(status)}
-    </span>
+    <div className={styles.statusCluster}>
+      <span className={`${styles.statusPill} ${styles[`status${status}`]}`}>
+        {statusLabel(status)}
+      </span>
+      <HelpTooltip
+        itemKey={getStatusHelpKey(status)}
+        label={statusLabel(status)}
+        align="end"
+      />
+    </div>
   );
 }
 
 function SummaryChip({
   label,
   check,
+  helpKey,
 }: {
   label: string;
   check: SpfCheck | DmarcCheck | DkimCheck;
+  helpKey?: HelpItemKey;
 }) {
   return (
     <div className={`${styles.summaryChip} ${styles[`status${check.status}`]}`}>
-      <span>{label}</span>
+      <TextWithHelp text={label} helpKey={helpKey} />
       <strong>{summaryValue(check)}</strong>
     </div>
   );
@@ -244,6 +292,7 @@ function RecordBlock({
   copyKey,
   copiedKey,
   onCopy,
+  helpKey,
 }: {
   label: string;
   value: string | null | undefined;
@@ -251,13 +300,16 @@ function RecordBlock({
   copyKey: string;
   copiedKey: string | null;
   onCopy: (value: string, copyKey: string) => void;
+  helpKey?: HelpItemKey;
 }) {
   const canCopy = typeof value === "string" && value.length > 0;
 
   return (
     <div className={`${styles.sectionBlock} ${styles.recordBlock}`}>
       <div className={styles.sectionHeading}>
-        <span className={styles.sectionLabel}>{label}</span>
+        <span className={styles.sectionLabel}>
+          <TextWithHelp text={label} helpKey={helpKey} />
+        </span>
         {canCopy ? (
           <CopyButton
             copyKey={copyKey}
@@ -282,7 +334,7 @@ function ParsedList({
   onCopy,
   copyPrefix,
 }: {
-  entries: Array<{ label: string; value: string | string[] | null | undefined }>;
+  entries: ParsedEntry[];
   copiedKey: string | null;
   onCopy: (value: string, copyKey: string) => void;
   copyPrefix: string;
@@ -301,12 +353,14 @@ function ParsedList({
         <span className={styles.sectionLabel}>Parsed</span>
       </div>
       <dl>
-        {visibleEntries.map(({ label, value }) => {
+        {visibleEntries.map(({ label, value, helpKey }) => {
           const normalizedValue = Array.isArray(value) ? value.join(", ") : value ?? "";
 
           return (
             <div key={label} className={styles.parsedRow}>
-              <dt>{label}</dt>
+              <dt>
+                <TextWithHelp text={label} helpKey={helpKey} />
+              </dt>
               <dd>{normalizedValue}</dd>
               <div className={styles.parsedCopy}>
                 <CopyButton
@@ -332,14 +386,16 @@ function CheckCard({
   emptyRecordMessage,
   copiedKey,
   onCopy,
+  labelHelpKey,
 }: {
   title: string;
   subtitle: string;
   check: SpfCheck | DmarcCheck | DkimCheck;
-  parsedEntries?: Array<{ label: string; value: string | string[] | null | undefined }>;
+  parsedEntries?: ParsedEntry[];
   emptyRecordMessage?: string;
   copiedKey: string | null;
   onCopy: (value: string, copyKey: string) => void;
+  labelHelpKey?: HelpItemKey;
 }) {
   const cardKey = title.toLowerCase();
 
@@ -347,7 +403,9 @@ function CheckCard({
     <article className={styles.card}>
       <div className={styles.cardHeader}>
         <div className={styles.cardTitleBlock}>
-          <h3>{title}</h3>
+          <h3>
+            <TextWithHelp text={title} helpKey={labelHelpKey} />
+          </h3>
           <p className={styles.cardSubtitle}>{subtitle}</p>
         </div>
         <StatusPill status={check.status} />
@@ -631,7 +689,14 @@ export default function Analyzer() {
           </label>
 
           <label className={styles.field}>
-            <span>DKIM selector (optional)</span>
+            <span>
+              <TextWithHelp
+                text="DKIM selector (optional)"
+                helpKey="dkimSelector"
+                align="end"
+                side="bottom"
+              />
+            </span>
             <input
               type="text"
               name="dkimSelector"
@@ -688,13 +753,20 @@ export default function Analyzer() {
                 <p className={styles.sectionEyebrow}>Results workspace</p>
                 <div className={styles.summaryTitleRow}>
                   <h2>{result.domain}</h2>
-                  <span
-                    className={`${styles.scoreLabel} ${
-                      styles[`score${scoreTone(result.summary.scoreLabel)}`]
-                    }`}
-                  >
-                    Overall posture: {result.summary.scoreLabel}
-                  </span>
+                  <div className={styles.scoreCluster}>
+                    <span
+                      className={`${styles.scoreLabel} ${
+                        styles[`score${scoreTone(result.summary.scoreLabel)}`]
+                      }`}
+                    >
+                      Overall posture: {result.summary.scoreLabel}
+                    </span>
+                    <HelpTooltip
+                      itemKey={getPostureHelpKey(result.summary.scoreLabel)}
+                      label="Overall posture"
+                      align="end"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -702,9 +774,21 @@ export default function Analyzer() {
             </div>
 
             <div className={styles.protocolStrip}>
-              <SummaryChip label="SPF" check={result.checks.spf} />
-              <SummaryChip label="DMARC" check={result.checks.dmarc} />
-              <SummaryChip label="DKIM" check={result.checks.dkim} />
+              <SummaryChip
+                label="SPF"
+                check={result.checks.spf}
+                helpKey={getSpfLabelHelpKey(result.checks.spf)}
+              />
+              <SummaryChip
+                label="DMARC"
+                check={result.checks.dmarc}
+                helpKey="dmarc"
+              />
+              <SummaryChip
+                label="DKIM"
+                check={result.checks.dkim}
+                helpKey={getDkimLabelHelpKey(result.checks.dkim)}
+              />
             </div>
 
             <ul className={styles.findingsList}>
@@ -721,12 +805,32 @@ export default function Analyzer() {
               check={result.checks.spf}
               copiedKey={copiedKey}
               onCopy={handleCopy}
+              labelHelpKey={getSpfLabelHelpKey(result.checks.spf)}
               parsedEntries={[
                 { label: "Version", value: result.checks.spf.parsed?.version },
-                { label: "Includes", value: result.checks.spf.parsed?.includes },
-                { label: "IPv4", value: result.checks.spf.parsed?.ip4 },
-                { label: "IPv6", value: result.checks.spf.parsed?.ip6 },
-                { label: "Final all", value: result.checks.spf.parsed?.all },
+                {
+                  label: "Includes",
+                  value: result.checks.spf.parsed?.includes,
+                  helpKey: "spfInclude",
+                },
+                {
+                  label: "IPv4",
+                  value: result.checks.spf.parsed?.ip4,
+                  helpKey: "spfIp4",
+                },
+                {
+                  label: "IPv6",
+                  value: result.checks.spf.parsed?.ip6,
+                  helpKey: "spfIp6",
+                },
+                {
+                  label: "Final all",
+                  value: result.checks.spf.parsed?.all,
+                  helpKey: getSpfAllHelpKey(
+                    result.checks.spf.parsed?.all,
+                    result.checks.spf.message.includes("Multiple SPF TXT records"),
+                  ),
+                },
               ]}
             />
 
@@ -736,13 +840,38 @@ export default function Analyzer() {
               check={result.checks.dmarc}
               copiedKey={copiedKey}
               onCopy={handleCopy}
+              labelHelpKey="dmarc"
               parsedEntries={[
-                { label: "Policy", value: result.checks.dmarc.parsed?.p },
-                { label: "Aggregate reports", value: result.checks.dmarc.parsed?.rua },
-                { label: "Forensic reports", value: result.checks.dmarc.parsed?.ruf },
-                { label: "Percent", value: result.checks.dmarc.parsed?.pct },
-                { label: "DKIM alignment", value: result.checks.dmarc.parsed?.adkim },
-                { label: "SPF alignment", value: result.checks.dmarc.parsed?.aspf },
+                {
+                  label: "Policy",
+                  value: result.checks.dmarc.parsed?.p,
+                  helpKey: "dmarcPolicy",
+                },
+                {
+                  label: "Aggregate reports",
+                  value: result.checks.dmarc.parsed?.rua,
+                  helpKey: "dmarcRua",
+                },
+                {
+                  label: "Forensic reports",
+                  value: result.checks.dmarc.parsed?.ruf,
+                  helpKey: "dmarcRuf",
+                },
+                {
+                  label: "Percent",
+                  value: result.checks.dmarc.parsed?.pct,
+                  helpKey: "dmarcPct",
+                },
+                {
+                  label: "DKIM alignment",
+                  value: result.checks.dmarc.parsed?.adkim,
+                  helpKey: "dmarcAlignment",
+                },
+                {
+                  label: "SPF alignment",
+                  value: result.checks.dmarc.parsed?.aspf,
+                  helpKey: "dmarcAlignment",
+                },
               ]}
             />
 
@@ -752,6 +881,7 @@ export default function Analyzer() {
               check={result.checks.dkim}
               copiedKey={copiedKey}
               onCopy={handleCopy}
+              labelHelpKey={getDkimLabelHelpKey(result.checks.dkim)}
               emptyRecordMessage={
                 result.checks.dkim.checked
                   ? "No selector-specific TXT record was found."
@@ -760,7 +890,11 @@ export default function Analyzer() {
               parsedEntries={
                 result.checks.dkim.checked
                   ? [
-                      { label: "Selector", value: result.checks.dkim.selector },
+                      {
+                        label: "Selector",
+                        value: result.checks.dkim.selector,
+                        helpKey: "dkimSelector",
+                      },
                       { label: "Version", value: result.checks.dkim.parsed?.version },
                     ]
                   : undefined
@@ -770,7 +904,13 @@ export default function Analyzer() {
 
           <section className={styles.recommendations}>
             <div className={styles.recommendationsHeader}>
-              <p className={styles.sectionEyebrow}>Recommendations</p>
+              <div className={styles.eyebrowWithHelp}>
+                <p className={styles.sectionEyebrow}>Recommendations</p>
+                <HelpTooltip
+                  itemKey="recommendations"
+                  label="Recommendations"
+                />
+              </div>
               <h3>Practical next steps</h3>
             </div>
             <ul className={styles.recommendationList}>
@@ -786,7 +926,10 @@ export default function Analyzer() {
                           styles[`recommendation${meta.tone}`]
                         }`}
                       >
-                        {meta.toneLabel}
+                        <TextWithHelp
+                          text={meta.toneLabel}
+                          helpKey={getRecommendationToneHelpKey(meta.toneLabel)}
+                        />
                       </span>
                     </div>
                     <p>{recommendation}</p>

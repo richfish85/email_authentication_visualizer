@@ -10,11 +10,11 @@
   border-radius: 18px;
   background: var(--panel);
   box-shadow: var(--panel-shadow);
+  overflow: visible;
 }
 
 .formShell {
   position: relative;
-  overflow: hidden;
   padding: 1rem;
   animation: riseIn 260ms ease both;
 }
@@ -65,8 +65,8 @@
 
 .sectionEyebrow,
 .sectionLabel,
-.field span,
-.summaryChip span {
+.field > span,
+.summaryChip > span {
   font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -83,6 +83,19 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+
+.inlineHelp,
+.eyebrowWithHelp,
+.statusCluster,
+.scoreCluster {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+}
+
+.eyebrowWithHelp {
+  min-height: 1.05rem;
 }
 
 .metaChip {
@@ -243,7 +256,6 @@
 
 .summaryBanner {
   position: relative;
-  overflow: hidden;
   padding: 1rem;
 }
 
@@ -349,6 +361,8 @@
 }
 
 .card {
+  position: relative;
+  overflow: visible;
   display: grid;
   gap: 0.75rem;
   padding: 0.9rem;
@@ -410,6 +424,8 @@
 }
 
 .sectionBlock {
+  position: relative;
+  overflow: visible;
   display: grid;
   gap: 0.45rem;
   padding: 0.75rem 0.8rem;
@@ -480,7 +496,10 @@
 
 .parsedRow {
   display: grid;
-  grid-template-columns: minmax(0, 116px) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 116px) minmax(0, 1fr);
+  grid-template-areas:
+    "term value"
+    ". copy";
   gap: 0.65rem;
   padding: 0.45rem 0;
   align-items: start;
@@ -491,24 +510,28 @@
 }
 
 .parsedRow dt {
+  grid-area: term;
   color: var(--text-secondary);
   font-weight: 700;
 }
 
 .parsedRow dd {
+  grid-area: value;
   margin: 0;
   color: var(--text-primary);
   word-break: break-word;
 }
 
 .parsedCopy {
+  grid-area: copy;
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
+  margin-top: -0.2rem;
 }
 
 .recommendations {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   padding: 1rem;
 }
 
@@ -748,6 +771,10 @@
 
   .parsedRow {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "term"
+      "value"
+      "copy";
     gap: 0.2rem;
   }
 
