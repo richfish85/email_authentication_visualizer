@@ -1,0 +1,26 @@
+[
+  {
+    "label": "Documentation baseline",
+    "domain": "example.com",
+    "dkimSelector": "google",
+    "demonstrates": "A simple reserved domain with compact SPF, DMARC, and selector-specific DKIM output."
+  },
+  {
+    "label": "Large provider",
+    "domain": "google.com",
+    "dkimSelector": "20230601",
+    "demonstrates": "A well-known domain with published authentication records."
+  },
+  {
+    "label": "URL normalization",
+    "domain": "https://www.cloudflare.com/learning/email-security/dmarc-dkim-spf/",
+    "dkimSelector": "",
+    "demonstrates": "The app strips a pasted URL down to a bare host before lookup."
+  },
+  {
+    "label": "DMARC policy inspection",
+    "domain": "microsoft.com",
+    "dkimSelector": "selector1",
+    "demonstrates": "DMARC policy parsing plus selector-specific DKIM behavior."
+  }
+]

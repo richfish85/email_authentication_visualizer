@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="640" viewBox="0 0 1400 640" role="img" aria-labelledby="title desc">
+  <title id="title">Email Authentication Visualizer workflow</title>
+  <desc id="desc">Five-step workflow: enter a domain, optionally add a DKIM selector, run DNS TXT lookups, parse SPF DMARC and DKIM, then review posture and next steps.</desc>
+  <defs>
+    <linearGradient id="panel" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#f8fbff" />
+      <stop offset="1" stop-color="#eef5ff" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#16324f" flood-opacity="0.14" />
+    </filter>
+  </defs>
+
+  <rect width="1400" height="640" fill="#f5f8fc" />
+  <rect x="48" y="48" width="1304" height="544" rx="28" fill="url(#panel)" stroke="#d8e5f4" />
+
+  <text x="96" y="118" fill="#172033" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="40" font-weight="750">
+    Email Authentication Visualizer
+  </text>
+  <text x="96" y="156" fill="#58677d" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="20">
+    DNS-first workflow for checking SPF, DMARC, and selector-based DKIM records
+  </text>
+
+  <g font-family="Inter, Segoe UI, Arial, sans-serif" filter="url(#shadow)">
+    <g transform="translate(96 226)">
+      <rect width="208" height="214" rx="18" fill="#ffffff" stroke="#dbe6f3" />
+      <circle cx="104" cy="58" r="31" fill="#e9f2ff" />
+      <path d="M84 57h40M91 47h26M91 67h26" stroke="#246bfe" stroke-width="7" stroke-linecap="round" />
+      <text x="104" y="117" fill="#172033" font-size="21" font-weight="750" text-anchor="middle">1 Enter domain</text>
+      <text x="104" y="153" fill="#65758d" font-size="16" text-anchor="middle">Use a bare domain</text>
+      <text x="104" y="177" fill="#65758d" font-size="16" text-anchor="middle">or paste a URL</text>
+    </g>
+
+    <g transform="translate(340 226)">
+      <rect width="208" height="214" rx="18" fill="#ffffff" stroke="#dbe6f3" />
+      <circle cx="104" cy="58" r="31" fill="#fff7df" />
+      <path d="M86 58h36M104 40v36M125 48l10 10-10 10" stroke="#b77900" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+      <text x="104" y="112" fill="#172033" font-size="20" font-weight="750" text-anchor="middle">2 Optional DKIM</text>
+      <text x="104" y="138" fill="#172033" font-size="20" font-weight="750" text-anchor="middle">selector</text>
+      <text x="104" y="174" fill="#65758d" font-size="16" text-anchor="middle">Provider-specific</text>
+      <text x="104" y="198" fill="#65758d" font-size="16" text-anchor="middle">when known</text>
+    </g>
+
+    <g transform="translate(584 226)">
+      <rect width="208" height="214" rx="18" fill="#ffffff" stroke="#dbe6f3" />
+      <circle cx="104" cy="58" r="31" fill="#e8faf1" />
+      <path d="M78 61c12-23 40-23 52 0M89 71c7-11 23-11 30 0M104 83v10" stroke="#0a8f5a" stroke-width="7" stroke-linecap="round" />
+      <text x="104" y="117" fill="#172033" font-size="21" font-weight="750" text-anchor="middle">3 DNS TXT</text>
+      <text x="104" y="143" fill="#172033" font-size="21" font-weight="750" text-anchor="middle">lookups</text>
+      <text x="104" y="179" fill="#65758d" font-size="16" text-anchor="middle">SPF, DMARC, DKIM</text>
+    </g>
+
+    <g transform="translate(828 226)">
+      <rect width="208" height="214" rx="18" fill="#ffffff" stroke="#dbe6f3" />
+      <circle cx="104" cy="58" r="31" fill="#edf0ff" />
+      <path d="M86 46h36M86 60h28M86 74h36M128 44l14 14-14 14" stroke="#5856d6" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+      <text x="104" y="112" fill="#172033" font-size="20" font-weight="750" text-anchor="middle">4 Parse SPF /</text>
+      <text x="104" y="138" fill="#172033" font-size="20" font-weight="750" text-anchor="middle">DMARC / DKIM</text>
+      <text x="104" y="174" fill="#65758d" font-size="16" text-anchor="middle">Extract policy tags</text>
+      <text x="104" y="198" fill="#65758d" font-size="16" text-anchor="middle">and raw records</text>
+    </g>
+
+    <g transform="translate(1072 226)">
+      <rect width="232" height="214" rx="18" fill="#ffffff" stroke="#dbe6f3" />
+      <circle cx="116" cy="58" r="31" fill="#e8faf1" />
+      <path d="M96 58l13 13 29-31" stroke="#0a8f5a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+      <text x="116" y="112" fill="#172033" font-size="20" font-weight="750" text-anchor="middle">5 Review posture</text>
+      <text x="116" y="138" fill="#172033" font-size="20" font-weight="750" text-anchor="middle">and next steps</text>
+      <text x="116" y="174" fill="#65758d" font-size="16" text-anchor="middle">Pass, warning, or</text>
+      <text x="116" y="198" fill="#65758d" font-size="16" text-anchor="middle">needs attention</text>
+    </g>
+  </g>
+
+  <g stroke="#aebed1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M310 333h22" />
+    <path d="M325 322l12 11-12 11" />
+    <path d="M554 333h22" />
+    <path d="M569 322l12 11-12 11" />
+    <path d="M798 333h22" />
+    <path d="M813 322l12 11-12 11" />
+    <path d="M1042 333h22" />
+    <path d="M1057 322l12 11-12 11" />
+  </g>
+
+  <rect x="96" y="492" width="1208" height="48" rx="12" fill="#ffffff" stroke="#dbe6f3" />
+  <text x="120" y="523" fill="#58677d" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18">
+    Scope note: DKIM is checked only when a selector is supplied. The tool reads DNS TXT records and does not guarantee deliverability.
+  </text>
+</svg>

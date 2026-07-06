@@ -11,6 +11,7 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import HelpTooltip from "@/components/help-tooltip";
+import { analyzeDomainWithDoh } from "@/lib/email-auth-browser";
 import { normalizeDkimSelectorInput, normalizeDomainInput } from "@/lib/domain";
 import {
   getDkimLabelHelpKey,
@@ -68,6 +69,8 @@ const initialFormState: FormState = {
   dkimSelector: "",
 };
 
+const useBrowserDnsLookups = process.env.NEXT_PUBLIC_DNS_LOOKUP_MODE === "doh";
+
 function normalizeInputs(domainInput: string, dkimSelectorInput: string): NormalizedInputs {
   const normalizedDomain = normalizeDomainInput(domainInput);
   if (!normalizedDomain.ok) {
@@ -113,6 +116,35 @@ function buildSharePath(domain: string, selector: string, basePath = "/analyze")
   }
 
   return `${basePath}?${params.toString()}`;
+}
+
+async function fetchServerAnalysis(form: FormState) {
+  const response = await fetch("/api/analyze-domain", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      domain: form.domain,
+      dkimSelector: form.dkimSelector,
+    }),
+  });
+
+  const payload = (await response.json()) as AnalysisResponse | { error: string };
+
+  if (!response.ok) {
+    throw new Error(
+      "error" in payload
+        ? payload.error
+        : "Unable to analyze the domain right now.",
+    );
+  }
+
+  if ("error" in payload) {
+    throw new Error(payload.error);
+  }
+
+  return payload;
 }
 
 function statusLabel(status: CheckStatus) {
@@ -557,30 +589,12 @@ export default function Analyzer() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/analyze-domain", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          domain: normalizedForm.domain,
-          dkimSelector: normalizedForm.dkimSelector,
-        }),
-      });
-
-      const payload = (await response.json()) as AnalysisResponse | { error: string };
-
-      if (!response.ok) {
-        throw new Error(
-          "error" in payload
-            ? payload.error
-            : "Unable to analyze the domain right now.",
-        );
-      }
-
-      if ("error" in payload) {
-        throw new Error(payload.error);
-      }
+      const payload = useBrowserDnsLookups
+        ? await analyzeDomainWithDoh(
+            normalizedForm.domain,
+            normalizedForm.dkimSelector,
+          )
+        : await fetchServerAnalysis(normalizedForm);
 
       startTransition(() => {
         setResult(payload);
