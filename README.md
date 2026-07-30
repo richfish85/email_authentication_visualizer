@@ -1,101 +1,91 @@
 # Email Authentication Visualizer
 
-Small full-stack Next.js MVP for checking a domain's email authentication setup.
-It turns raw DNS TXT records into a readable SPF, DMARC, and selector-based DKIM
-review.
+A focused security-operations aid for reviewing a domain's public SPF, DMARC,
+and selector-based DKIM records during phishing or business email compromise
+(BEC) triage.
 
-Live demo: https://richfish85.github.io/email_authentication_visualizer/
+The tool turns DNS TXT records into readable findings, preserves the raw values
+for analyst notes, and calls out where a result is incomplete. It supports an
+investigation; it does not decide whether an email is malicious.
+
+[Open the live demo](https://richfish85.github.io/email_authentication_visualizer/)
 
 ![Workflow for using Email Authentication Visualizer](docs/email-auth-workflow.svg)
 
-## What
+## Security operations use case
 
-Email Authentication Visualizer helps a user inspect the DNS records that affect
-email spoofing resistance:
+An analyst investigating a reported message may need to understand whether its
+claimed sender domain publishes basic anti-spoofing controls. This project makes
+that public DNS review quicker and easier to document:
 
 - SPF on the base domain
 - DMARC on `_dmarc.<domain>`
-- DKIM on `<selector>._domainkey.<domain>` when a selector is supplied
+- DKIM on `<selector>._domainkey.<domain>` when a selector is known
+- Raw records, parsed fields, a plain-language posture label, and follow-up
+  recommendations
 
-The app returns raw records, parsed fields, a plain-language posture label, and
-practical recommendations.
+The result is one evidence source alongside the original message, full headers,
+mail-gateway verdicts, user context, URL and attachment analysis, and the
+organisation's response procedures.
 
-## Why
+## Phishing / BEC analyst workflow
 
-SPF, DMARC, and DKIM records are public, but they are not always easy to read.
-This project is designed as a portfolio-friendly cybersecurity visualizer: it
-shows the user what was checked, what was found, what looks risky, and what to
-review next.
+1. Preserve the reported message and its full headers according to local policy.
+2. Record the visible `From` domain, envelope/`Return-Path` domain, `Reply-To`
+   domain, and the DKIM `d=` domain and `s=` selector when present.
+3. Check the relevant domain here and supply the observed DKIM selector. Do not
+   guess that DKIM is absent merely because one selector returns no record.
+4. Compare the published DNS posture with the message's `Authentication-Results`
+   header and the mail gateway's SPF, DKIM, and DMARC verdicts.
+5. Add the raw record evidence and limitations to the ticket, then contain or
+   escalate based on the full set of indicators and organisational policy.
 
-## How
+### Synthetic analyst conclusion / ticket note
 
-1. Enter a domain, such as `example.com`.
-2. Optionally enter a DKIM selector, such as `google` or `selector1`.
-3. Run the analysis.
-4. Review SPF, DMARC, and DKIM cards.
-5. Copy raw records or parsed values for follow-up notes.
+> **INC-2026-0147 — suspected supplier impersonation (training scenario).** The
+> visible From domain was `accounts-payable.example`; the Reply-To used a
+> different domain. The preserved message reported SPF fail, no aligned DKIM
+> result, and DMARC fail. A public DNS review found no SPF or DMARC record and no
+> TXT record for the observed DKIM selector `mail2026`. The lookup cannot prove
+> malicious intent or rule out other DKIM selectors. Combined with the domain
+> mismatch and urgent bank-detail change, treat as suspected BEC: preserve the
+> original message, escalate to the incident queue, and verify the request with
+> the supplier through a known contact channel before taking action.
 
-## Portfolio notes
-
-This is intentionally scoped as an MVP rather than a complete email security
-scanner. The strongest portfolio signals are:
-
-- Clear product framing for a real security-adjacent workflow
-- Server-side DNS lookups through `node:dns/promises`
-- Input normalization and validation before lookup
-- Honest DKIM handling: selector-based checks only, no fake discovery
-- Parsed SPF and DMARC fields with user-facing recommendations
-- Shareable analysis URLs through query parameters
-- Lightweight tests around normalization, parsing, and posture scoring
+All domains, people, and identifiers in this example are synthetic.
 
 ## Screenshots
 
-### Home / Empty State
+### Home / empty state
 
 ![Home screen before analysis](docs/screenshots/01-home-empty.png)
 
-### Results State
+### Results state
 
 ![Results for example.com](docs/screenshots/02-results-example-com.png)
 
-### Validation State
+### Validation state
 
 ![Validation error for invalid input](docs/screenshots/03-validation-error.png)
 
-### Mobile Results
+### Mobile results
 
 ![Mobile results view](docs/screenshots/04-mobile-results-example-com.png)
 
-## Demo placeholders
-
-Add these when polishing:
-
-- Short screen recording: domain input to recommendations
-
 ## Implementation
 
-- Next.js App Router
-- TypeScript
-- CSS Modules
-- Node runtime API route at `POST /api/analyze-domain`
-- DNS TXT lookups through `node:dns/promises`
-- GitHub Pages static build uses browser-side DNS-over-HTTPS
-- Vitest for focused parser and scoring tests
+- Next.js App Router, TypeScript, and CSS Modules
+- Local/server deployment: Node runtime route at `POST /api/analyze-domain` with
+  DNS TXT lookups through `node:dns/promises`
+- GitHub Pages deployment: static export with browser-side DNS-over-HTTPS
+- Input normalization and validation before lookup
+- Selector-specific DKIM checks without claiming automatic selector discovery
+- Focused Vitest coverage for normalization, parsing, and posture scoring
+- GitHub Actions checks lint and tests, builds `out/`, and deploys the live demo
 
-## Deployment
+The workflow diagram above shows the input, lookup, parsing, and review path.
 
-The normal Next.js build uses the local API route for DNS lookup. The GitHub
-Pages build is static, so it switches to browser-side DNS-over-HTTPS at build
-time with:
-
-```bash
-GITHUB_PAGES=true NEXT_PUBLIC_DNS_LOOKUP_MODE=doh npm run build
-```
-
-The Pages workflow runs lint, tests, a static export, and then publishes `out/`
-through GitHub Actions.
-
-## API
+### API
 
 `POST /api/analyze-domain`
 
@@ -108,55 +98,68 @@ Request body:
 }
 ```
 
-Notes:
-
 - `domain` is required.
 - `dkimSelector` is optional.
-- URLs like `https://example.com/path` are normalized to a hostname when possible.
-- The UI is designed around bare domains.
+- A pasted URL is normalized to its hostname when possible.
+- The interface is designed around bare domains.
 
-## Sample inputs
+### Deployment modes
 
-See [docs/sample-domains.json](docs/sample-domains.json) for reviewer-friendly
-sample inputs.
+The normal Next.js build uses the local API route. GitHub Pages cannot run that
+route, so its static build selects browser-side DNS-over-HTTPS:
 
-Example:
-
-```json
-{
-  "domain": "example.com",
-  "dkimSelector": "google"
-}
+```bash
+GITHUB_PAGES=true NEXT_PUBLIC_DNS_LOOKUP_MODE=doh npm run build
 ```
 
-This demonstrates missing-record handling for SPF, DMARC, and a selector-specific
-DKIM lookup.
+On Windows PowerShell, use:
+
+```powershell
+$env:GITHUB_PAGES="true"
+$env:NEXT_PUBLIC_DNS_LOOKUP_MODE="doh"
+npm run build
+```
 
 ## Assumptions
 
-- DNS TXT records are the source of truth for this MVP.
-- SPF and DMARC can be checked directly from predictable DNS names.
-- DKIM cannot be reliably discovered without knowing provider selectors first.
-- A posture label is guidance, not a guarantee of deliverability or security.
-- DNS responses can change at any time, so sample outputs may drift.
+- Public DNS TXT records are the only data source examined by this MVP.
+- SPF and DMARC use predictable DNS names; DKIM requires a known selector.
+- The analyst obtains message headers and gateway verdicts elsewhere.
+- A posture label is triage guidance, not proof of authenticity, compromise,
+  deliverability, or malicious intent.
+- DNS changes over time, so a result describes the resolver response at the time
+  of the check.
 
 ## Threat and risk notes
 
-- The app does not send email or verify mailbox-level deliverability.
-- The app does not prove that all legitimate senders are covered by SPF.
-- The app does not validate private DKIM signing behavior, only public selector
-  records.
-- A domain can have correct-looking records and still have operational gaps.
-- DNS timeouts and resolver errors are treated as warnings so the user knows the
-  check was inconclusive.
+- The tool does not ingest an email, parse `Authentication-Results`, inspect
+  links or attachments, or verify mailbox-level delivery.
+- A published SPF record does not prove that every legitimate sender is covered
+  or that a specific message passed SPF with identifier alignment.
+- A public DKIM key does not prove that a specific message has a valid signature.
+  No result for one selector does not prove that DKIM is absent.
+- A correct-looking DNS posture does not rule out display-name spoofing,
+  lookalike domains, compromised mailboxes, forwarding effects, or operational
+  misconfiguration.
+- DNS-over-HTTPS requests from the public demo are sent to its configured
+  resolver. Do not submit a domain if that disclosure is unacceptable.
+- Resolver timeouts and errors remain inconclusive findings rather than failures
+  of the domain's security controls.
 
-## Current MVP scope
+See [SECURITY.md](SECURITY.md) for the project's disclosure scope and safe-use
+expectations.
+
+## Current scope
 
 - SPF: existence, raw record, includes, `ip4`, `ip6`, and final `all`
-- DMARC: existence, raw record, `p`, `rua`, `ruf`, `pct`, `adkim`, `aspf`
+- DMARC: existence, raw record, `p`, `rua`, `ruf`, `pct`, `adkim`, and `aspf`
 - DKIM: selector-based lookup only; no generic selector discovery
-- Recommendations: practical next steps based on missing, weak, or ambiguous
+- Recommendations: next steps for missing, weak, ambiguous, or inconclusive
   records
+
+Reviewer-friendly sample inputs are in
+[`docs/sample-domains.json`](docs/sample-domains.json). Live DNS answers may
+change after these examples are published.
 
 ## Run locally
 
@@ -181,15 +184,14 @@ Manual smoke test:
 1. Start the app with `npm run dev`.
 2. Open `http://localhost:3000`.
 3. Analyze `example.com` with DKIM selector `google`.
-4. Confirm the app reports missing SPF, missing DMARC, and no selector-specific
-   DKIM record.
-5. Try one well-known provider domain from `docs/sample-domains.json`.
+4. Confirm raw results, posture notes, and recommendations render without an
+   application error. DNS answers may change, so do not hard-code a security
+   conclusion from this live domain.
+5. Submit an invalid value such as `not a domain!` and confirm validation blocks
+   the lookup.
 
-## Next polish ideas
+## Possible extensions
 
-- Add screenshots and a short GIF or video walkthrough.
-- Deploy the app and add the live URL above.
-- Add API route tests with mocked DNS responses.
-- Add a small architecture diagram showing browser, API route, DNS resolver, and
-  result cards.
-- Add a `SECURITY.md` with disclosure scope if this becomes public-facing.
+- API route tests with mocked DNS responses
+- Optional import of sanitised message-header fields for side-by-side comparison
+- A short screen recording of the analyst workflow
